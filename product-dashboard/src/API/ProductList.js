@@ -23,7 +23,7 @@ const ProductList = () => {
   // Fetch products from the server
   const fetchProducts = async () => {
     try {
-      const url = `http://localhost:5000/api/products/${encodeURIComponent(selectedCategory)}`;
+      const url = `https://apiv-1.vercel.app/api/products/${encodeURIComponent(selectedCategory)}`;
       const response = await axios.get(url);
       setProducts(response.data);
     } catch (error) {
@@ -46,7 +46,7 @@ const ProductList = () => {
   const handleDelete = async (id) => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/products/${encodeURIComponent(selectedCategory)}/${id}`
+        `https://apiv-1.vercel.app/api/products/${encodeURIComponent(selectedCategory)}/${id}`
       );
       fetchProducts(); // Refresh the product list
     } catch (error) {
@@ -85,7 +85,7 @@ const ProductList = () => {
     e.preventDefault();
     try {
       await axios.put(
-        `http://localhost:5000/api/products/${encodeURIComponent(selectedCategory)}/${id}`,
+        `https://apiv-1.vercel.app/api/products/${encodeURIComponent(selectedCategory)}/${id}`,
         {
           ...editFormData,
           price: Number(editFormData.price),
