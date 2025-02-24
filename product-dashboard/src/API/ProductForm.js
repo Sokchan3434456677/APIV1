@@ -139,7 +139,7 @@ const ProductForm = ({ onProductAdded }) => {
     e.preventDefault();
     console.log("Submitting form with data:", formData); // Debug log
     try {
-      const url = `http://localhost:5000/api/products/${encodeURIComponent(formData.category)}`;
+      const url = `https://apiv-1.vercel.app/api/products/${encodeURIComponent(formData.category)}`;
       await axios.post(url, {
         ...formData,
         price: Number(formData.price),
