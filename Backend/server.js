@@ -1,8 +1,8 @@
+
 // const express = require("express");
 // const cors = require("cors");
 // const mongoose = require("mongoose");
 // const app = express();
-// // const IP_ADDRESS = '192.168.1.10';
 // const PORT = 5000;
 
 // // Connect to MongoDB
@@ -19,12 +19,12 @@
 // db.on("error", console.error.bind(console, "MongoDB connection error:"));
 // db.once("open", () => console.log("Connected to MongoDB"));
 
-// // Define Product Schema (Updated without color field)
+// // Define Product Schema (Updated to support multiple images)
 // const productSchema = new mongoose.Schema({
 //   name: { type: String, required: true },
 //   description: String,
 //   price: { type: Number, required: true },
-//   image: String,
+//   images: { type: [String], default: [] }, // Array of image URLs
 //   category: {
 //     type: String,
 //     required: true,
@@ -49,6 +49,7 @@
 //       price: Number(productData.price),
 //       stock: Number(productData.stock) || 0,
 //       size: productData.size,
+//       images: productData.images.filter(url => url.trim() !== ""), // Filter out empty URLs
 //     });
 //     await product.save();
 //     res.status(201).json({ message: `Product added to ${category}!`, product });
@@ -90,6 +91,7 @@
 
 //     if (updates.price) updates.price = Number(updates.price);
 //     if (updates.stock) updates.stock = Number(updates.stock);
+//     if (updates.images) updates.images = updates.images.filter(url => url.trim() !== ""); // Filter out empty URLs
 
 //     const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true });
 //     if (!updatedProduct) {
@@ -150,6 +152,18 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -170,7 +184,7 @@ const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 db.once("open", () => console.log("Connected to MongoDB"));
 
-// Define Product Schema (Updated to support multiple images)
+// Define Product Schema
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
@@ -187,6 +201,7 @@ const productSchema = new mongoose.Schema({
 
 const Product = mongoose.model("Product", productSchema);
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -200,7 +215,7 @@ app.post("/api/products/:category", async (req, res) => {
       price: Number(productData.price),
       stock: Number(productData.stock) || 0,
       size: productData.size,
-      images: productData.images.filter(url => url.trim() !== ""), // Filter out empty URLs
+      images: productData.images.filter((url) => url.trim() !== ""), // Filter out empty URLs
     });
     await product.save();
     res.status(201).json({ message: `Product added to ${category}!`, product });
@@ -224,6 +239,12 @@ app.get("/api/products/:category", async (req, res) => {
 app.get("/api/products/id/:id", async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Validate if the ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid product ID" });
+    }
+
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
@@ -242,7 +263,7 @@ app.put("/api/products/:category/:id", async (req, res) => {
 
     if (updates.price) updates.price = Number(updates.price);
     if (updates.stock) updates.stock = Number(updates.stock);
-    if (updates.images) updates.images = updates.images.filter(url => url.trim() !== ""); // Filter out empty URLs
+    if (updates.images) updates.images = updates.images.filter((url) => url.trim() !== ""); // Filter out empty URLs
 
     const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true });
     if (!updatedProduct) {
