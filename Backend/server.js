@@ -1,4 +1,3 @@
-
 // const express = require("express");
 // const cors = require("cors");
 // const mongoose = require("mongoose");
@@ -19,7 +18,7 @@
 // db.on("error", console.error.bind(console, "MongoDB connection error:"));
 // db.once("open", () => console.log("Connected to MongoDB"));
 
-// // Define Product Schema (Updated to support multiple images)
+// // Define Product Schema
 // const productSchema = new mongoose.Schema({
 //   name: { type: String, required: true },
 //   description: String,
@@ -36,6 +35,7 @@
 
 // const Product = mongoose.model("Product", productSchema);
 
+// // Middleware
 // app.use(cors());
 // app.use(express.json());
 
@@ -49,7 +49,7 @@
 //       price: Number(productData.price),
 //       stock: Number(productData.stock) || 0,
 //       size: productData.size,
-//       images: productData.images.filter(url => url.trim() !== ""), // Filter out empty URLs
+//       images: productData.images.filter((url) => url.trim() !== ""), // Filter out empty URLs
 //     });
 //     await product.save();
 //     res.status(201).json({ message: `Product added to ${category}!`, product });
@@ -73,6 +73,12 @@
 // app.get("/api/products/id/:id", async (req, res) => {
 //   try {
 //     const { id } = req.params;
+
+//     // Validate if the ID is a valid MongoDB ObjectId
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ error: "Invalid product ID" });
+//     }
+
 //     const product = await Product.findById(id);
 //     if (!product) {
 //       return res.status(404).json({ error: "Product not found" });
@@ -91,7 +97,7 @@
 
 //     if (updates.price) updates.price = Number(updates.price);
 //     if (updates.stock) updates.stock = Number(updates.stock);
-//     if (updates.images) updates.images = updates.images.filter(url => url.trim() !== ""); // Filter out empty URLs
+//     if (updates.images) updates.images = updates.images.filter((url) => url.trim() !== ""); // Filter out empty URLs
 
 //     const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true });
 //     if (!updatedProduct) {
@@ -154,16 +160,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -189,7 +185,8 @@ const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
   price: { type: Number, required: true },
-  images: { type: [String], default: [] }, // Array of image URLs
+  discountPrice: { type: Number, default: null }, // Added discountPrice field
+  images: { type: [String], default: [] },
   category: {
     type: String,
     required: true,
@@ -213,9 +210,10 @@ app.post("/api/products/:category", async (req, res) => {
     const product = new Product({
       ...productData,
       price: Number(productData.price),
+      discountPrice: productData.discountPrice ? Number(productData.discountPrice) : null, // Handle discountPrice
       stock: Number(productData.stock) || 0,
       size: productData.size,
-      images: productData.images.filter((url) => url.trim() !== ""), // Filter out empty URLs
+      images: productData.images.filter((url) => url.trim() !== ""),
     });
     await product.save();
     res.status(201).json({ message: `Product added to ${category}!`, product });
@@ -240,7 +238,6 @@ app.get("/api/products/id/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate if the ID is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid product ID" });
     }
@@ -262,8 +259,10 @@ app.put("/api/products/:category/:id", async (req, res) => {
     const updates = req.body;
 
     if (updates.price) updates.price = Number(updates.price);
+    if (updates.discountPrice !== undefined) 
+      updates.discountPrice = updates.discountPrice ? Number(updates.discountPrice) : null; // Handle discountPrice
     if (updates.stock) updates.stock = Number(updates.stock);
-    if (updates.images) updates.images = updates.images.filter((url) => url.trim() !== ""); // Filter out empty URLs
+    if (updates.images) updates.images = updates.images.filter((url) => url.trim() !== "");
 
     const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true });
     if (!updatedProduct) {
