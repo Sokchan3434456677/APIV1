@@ -936,7 +936,54 @@ app.delete("/api/products/:category/:id", async (req, res) => {
   }
 });
 
-// POST: Purchase a product and reduce stock
+// // POST: Purchase a product and reduce stock
+// app.post("/api/products/purchase/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { quantity, size } = req.body;
+
+//     // Validate product ID
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ error: "Invalid product ID" });
+//     }
+
+//     // Validate quantity
+//     if (!Number.isInteger(quantity) || quantity <= 0) {
+//       return res.status(400).json({ error: "Quantity must be a positive integer" });
+//     }
+
+//     // Validate size (optional, but must match product size if provided)
+//     if (size && typeof size !== "string") {
+//       return res.status(400).json({ error: "Size must be a string" });
+//     }
+
+//     // Find the product
+//     const product = await Product.findById(id);
+//     if (!product) {
+//       return res.status(404).json({ error: "Product not found" });
+//     }
+
+//     // Validate size if provided and product has a size
+//     if (size && product.size && product.size !== size) {
+//       return res.status(400).json({ error: `Invalid size. Available size: ${product.size}` });
+//     }
+
+//     // Check stock availability
+//     if (product.stock < quantity) {
+//       return res.status(400).json({ error: `Insufficient stock. Available: ${product.stock}` });
+//     }
+
+//     // Update stock
+//     product.stock -= quantity;
+//     await product.save();
+
+//     res.status(200).json({ message: "Purchase successful", product });
+//   } catch (error) {
+//     console.error("Error processing purchase:", error);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
 app.post("/api/products/purchase/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -952,7 +999,7 @@ app.post("/api/products/purchase/:id", async (req, res) => {
       return res.status(400).json({ error: "Quantity must be a positive integer" });
     }
 
-    // Validate size (optional, but must match product size if provided)
+    // Validate size (optional, but must match one of the product sizes if provided)
     if (size && typeof size !== "string") {
       return res.status(400).json({ error: "Size must be a string" });
     }
@@ -964,8 +1011,12 @@ app.post("/api/products/purchase/:id", async (req, res) => {
     }
 
     // Validate size if provided and product has a size
-    if (size && product.size && product.size !== size) {
-      return res.status(400).json({ error: `Invalid size. Available size: ${product.size}` });
+    if (size && product.size) {
+      // Split the product.size string into an array of valid sizes
+      const availableSizes = product.size.split(',').map(s => s.trim());
+      if (!availableSizes.includes(size)) {
+        return res.status(400).json({ error: `Invalid size. Available sizes: ${product.size}` });
+      }
     }
 
     // Check stock availability
@@ -983,6 +1034,7 @@ app.post("/api/products/purchase/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // BANNER ROUTES
 app.post("/api/post/banners", upload.single("image"), async (req, res) => {
